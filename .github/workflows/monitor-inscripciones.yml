@@ -45,6 +45,7 @@ jobs:
           EMAIL_TO_2: ${{ secrets.EMAIL_TO_2 }}
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
         run: |
           echo "🚀 Iniciando monitoreo a las $(date)"
           echo "🌍 Timezone: $(date +'%Z %z')"
