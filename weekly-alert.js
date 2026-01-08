@@ -140,9 +140,16 @@ async function sendWeeklyAlert() {
             return false;
         }
 
+        // Validar email de remitente
+        if (!process.env.EMAIL_FROM) {
+            console.log('❌ EMAIL_FROM no está configurado en el .env');
+            console.log('💡 Para AWS SES, debe ser un email verificado en tu cuenta');
+            return false;
+        }
+
         // Configurar el mensaje
         const mailOptions = {
-            from: `"💚 IIC Monitor Semanal" <${process.env.EMAIL_USER}>`,
+            from: `"💚 IIC Monitor Semanal" <${process.env.EMAIL_FROM}>`,
             to: recipients.join(', '),
             subject: emailSubject,
             html: emailBody
@@ -165,6 +172,12 @@ async function sendWeeklyAlert() {
             console.error('🔑 Error de autenticación. Verifica EMAIL_USER y EMAIL_PASSWORD en el .env');
         } else if (error.code === 'ENOTFOUND') {
             console.error('🌐 Error de conexión. Verifica la configuración SMTP en el .env');
+        } else if (error.message.includes('501') || error.message.includes('Invalid MAIL FROM')) {
+            console.error('📧 Error de remitente inválido:');
+            console.error('   - Verifica que EMAIL_FROM esté configurado con un email real');
+            console.error('   - Para AWS SES: el email debe estar VERIFICADO en tu consola AWS');
+            console.error('   - Para AWS SES: verifica que estés en la región correcta');
+            console.error('   - Actual EMAIL_FROM:', process.env.EMAIL_FROM || '(no configurado)');
         }
         return false;
     }
