@@ -1,0 +1,25 @@
+{
+  "name": "web-scraper",
+  "version": "1.0.0",
+  "description": "Script de scraping para la página del IIC Buenos Aires",
+  "main": "scraper.js",
+  "scripts": {
+    "start": "node scraper.js",
+    "dev": "node scraper.js",
+    "weekly-alert": "node weekly-alert.js"
+  },
+  "dependencies": {
+    "axios": "^1.13.2",
+    "dotenv": "^16.6.1",
+    "jsdom": "^23.0.0",
+    "nodemailer": "^6.10.1"
+  },
+  "keywords": [
+    "scraping",
+    "javascript",
+    "node",
+    "axios"
+  ],
+  "author": "",
+  "license": "ISC"
+}

@@ -1,0 +1,19 @@
+# Ignorar dependencias
+node_modules/
+
+# Ignorar archivo de configuración con datos sensibles
+.env
+
+# Archivo de estado se mantiene en el repo para persistencia
+# email-status.json
+
+# Ignorar archivos de log
+*.log
+
+# Ignorar archivos temporales
+*.tmp
+*.temp
+
+# Ignorar archivos de sistema
+.DS_Store
+Thumbs.db

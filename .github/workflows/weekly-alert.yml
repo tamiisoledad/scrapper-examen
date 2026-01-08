@@ -1,0 +1,61 @@
+name: 📅 IIC Buenos Aires - Alerta Semanal del Sistema
+
+on:
+  # Ejecutar todos los jueves a las 9:00 AM hora argentina (12:00 PM UTC)
+  schedule:
+    - cron: '0 12 * * 4'  # 0 minutos, 12 horas, cualquier día del mes, cualquier mes, jueves (4)
+  
+  # Permitir ejecución manual
+  workflow_dispatch:
+
+# Permisos necesarios
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  weekly-alert:
+    name: 💚 Enviar Alerta Semanal
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout del repositorio
+        uses: actions/checkout@v4
+        
+      - name: 🟢 Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          
+      - name: 📦 Instalar dependencias
+        run: npm ci
+        
+      - name: 📅 Enviar alerta semanal del sistema
+        env:
+          EMAIL_USER: ${{ secrets.EMAIL_USER }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+          EMAIL_TO_1: ${{ secrets.EMAIL_TO_1 }}
+          EMAIL_TO_2: ${{ secrets.EMAIL_TO_2 }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+        run: |
+          echo "📅 Iniciando alerta semanal a las $(date)"
+          echo "🌍 Timezone: $(date +'%Z %z')"
+          echo "🇦🇷 Hora Argentina: $(TZ='America/Argentina/Buenos_Aires' date)"
+          echo "📧 Enviando reporte semanal de estado del sistema..."
+          node weekly-alert.js
+          
+      - name: 📊 Información de la alerta semanal
+        if: always()
+        run: |
+          echo "✅ Alerta semanal completada a las $(date)"
+          echo "🇦🇷 Hora actual en Argentina: $(TZ='America/Argentina/Buenos_Aires' date)"
+          echo "📅 Esta alerta se ejecuta todos los JUEVES a las 9:00 AM ARG"
+          echo "💚 Propósito: Confirmar que el sistema de monitoreo está activo"
+          echo "⏰ Próxima alerta semanal: Jueves siguiente a las 9:00 AM ARG"
+          echo ""
+          echo "🔄 Recordatorio de horarios del monitoreo principal:"
+          echo "   • 🌅 7:00 AM ARG (10:00 UTC) - Verificación matutina"
+          echo "   • 🌞 1:00 PM ARG (16:00 UTC) - Verificación del mediodía" 
+          echo "   • 🌙 7:00 PM ARG (22:00 UTC) - Verificación vespertina"

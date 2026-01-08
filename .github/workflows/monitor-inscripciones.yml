@@ -1,0 +1,91 @@
+name: 🔍 IIC Buenos Aires - Monitor de Inscripciones CILS
+
+on:
+  # Ejecutar 3 veces al día en hora argentina (UTC-3)
+  schedule:
+    # 7:00 AM Argentina (10:00 AM UTC)
+    - cron: '0 10 * * *'
+    # 1:00 PM Argentina (4:00 PM UTC)  
+    - cron: '0 16 * * *'
+    # 7:00 PM Argentina (10:00 PM UTC)
+    - cron: '0 22 * * *'
+  
+  # Permitir ejecución manual
+  workflow_dispatch:
+
+# Permisos necesarios para hacer commits automáticos
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  monitor-inscripciones:
+    name: 🎯 Verificar Apertura Inscripciones
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout del repositorio
+        uses: actions/checkout@v4
+        
+      - name: 🟢 Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          
+
+      - name: 📦 Instalar dependencias
+        run: npm ci
+        
+      - name: 🔍 Ejecutar monitoreo de inscripciones
+        env:
+          EMAIL_USER: ${{ secrets.EMAIL_USER }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+          EMAIL_TO_1: ${{ secrets.EMAIL_TO_1 }}
+          EMAIL_TO_2: ${{ secrets.EMAIL_TO_2 }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+        run: |
+          echo "🚀 Iniciando monitoreo a las $(date)"
+          echo "🌍 Timezone: $(date +'%Z %z')"
+          echo "🇦🇷 Hora Argentina: $(TZ='America/Argentina/Buenos_Aires' date)"
+          node scraper.js
+          
+      - name: 💾 Guardar estado de emails actualizado
+        uses: actions/upload-artifact@v4
+        with:
+          name: email-status
+          path: email-status.json
+          retention-days: 7
+        if: always()
+        
+      - name: 🔄 Commit del estado actualizado al repositorio
+        if: always()
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action Bot"
+          if [ -f email-status.json ]; then
+            git add email-status.json
+            if ! git diff --staged --quiet; then
+              git commit -m "🤖 Actualizar estado de emails - $(date)"
+              git push
+            else
+              echo "📄 No hay cambios en el estado"
+            fi
+          fi
+          
+      - name: 📊 Mostrar información del sistema
+        if: always()
+        run: |
+          echo "✅ Monitoreo completado a las $(date)"
+          echo "🇦🇷 Hora actual en Argentina: $(TZ='America/Argentina/Buenos_Aires' date)"
+          echo "⏰ Próximas ejecuciones programadas:"
+          echo "   • 🌅 7:00 AM ARG (10:00 UTC)"
+          echo "   • 🌞 1:00 PM ARG (16:00 UTC)" 
+          echo "   • 🌙 7:00 PM ARG (22:00 UTC)"
+          if [ -f email-status.json ]; then
+            echo "📄 Estado actual de emails:"
+            cat email-status.json
+          else
+            echo "📄 No hay archivo de estado (primera ejecución)"
+          fi
