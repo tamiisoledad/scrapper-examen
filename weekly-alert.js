@@ -140,6 +140,7 @@ async function sendWeeklyAlert() {
             return false;
         }
 
+        console.log('EMAIL_FROM:', process.env.EMAIL_FROM);
         // Validar email de remitente
         if (!process.env.EMAIL_FROM) {
             console.log('❌ EMAIL_FROM no está configurado en el .env');
