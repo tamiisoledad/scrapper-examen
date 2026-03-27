@@ -71,7 +71,7 @@ async function sendEmailNotification(aperturaResult, detailedInfo) {
         console.log('\n📧 Preparando envío de notificación por email...');
         
         // Configurar el transportador de email
-        const transporter = nodemailer.createTransporter({
+        const transporter = nodemailer.createTransport({
             host: process.env.SMTP_HOST || 'smtp.gmail.com',
             port: process.env.SMTP_PORT || 587,
             secure: false,
@@ -200,16 +200,16 @@ async function sendEmailNotification(aperturaResult, detailedInfo) {
 function checkAperturaIscrizioni(htmlContent) {
     try {
         console.log('\n🔍 Analizando campos de "Apertura iscrizioni"...');
-        
+
         // Crear un DOM virtual del HTML
         const dom = new JSDOM(htmlContent);
         const document = dom.window.document;
-        
+
         // Buscar la tabla que contiene "Apertura iscrizioni"
         const tables = document.querySelectorAll('table');
         let aperturaColumnIndex = -1;
         let targetTable = null;
-        
+
         // Buscar la tabla correcta y el índice de la columna "Apertura iscrizioni"
         for (let table of tables) {
             const headerRow = table.querySelector('tr');
@@ -224,46 +224,72 @@ function checkAperturaIscrizioni(htmlContent) {
                 });
             }
         }
-        
+
         if (aperturaColumnIndex === -1 || !targetTable) {
             console.log('❌ No se encontró la columna "Apertura iscrizioni"');
             return false;
         }
-        
+
         // Obtener todas las filas de datos (excluir la fila de encabezado)
         const dataRows = Array.from(targetTable.querySelectorAll('tr')).slice(1);
         console.log(`📊 Analizando ${dataRows.length} filas de datos`);
-        
+
+        // Lista de textos que indican que NO están abiertas las inscripciones
+        const placeholderTexts = [
+            'data da stabilire',
+            'da definire',
+            'tbd',
+            'to be determined',
+            'da stabilire',
+            'non disponibile',
+            'non ancora disponibile',
+            'prossimamente',
+            'in arrivo',
+            'in preparazione'
+        ];
+
         // Verificar el contenido de cada celda en la columna "Apertura iscrizioni"
-        let hasAnyValue = false;
+        let hasActualDates = false;
         let emptyCount = 0;
-        
+        let placeholderCount = 0;
+
         dataRows.forEach((row, rowIndex) => {
             const cells = row.querySelectorAll('td');
             if (cells.length > aperturaColumnIndex) {
                 const aperturaCell = cells[aperturaColumnIndex];
-                const cellContent = aperturaCell.textContent.trim();
-                
+                const cellContent = aperturaCell.textContent.trim().toLowerCase();
+
                 console.log(`📍 Fila ${rowIndex + 1} - Contenido: "${cellContent}" (Longitud: ${cellContent.length})`);
-                
-                if (cellContent.length > 0) {
-                    console.log(`✅ Fila ${rowIndex + 1}: Tiene valor`);
-                    hasAnyValue = true;
-                } else {
+
+                if (cellContent.length === 0) {
                     console.log(`⭕ Fila ${rowIndex + 1}: Está vacía`);
                     emptyCount++;
+                } else {
+                    // Verificar si es un texto placeholder
+                    const isPlaceholder = placeholderTexts.some(placeholder =>
+                        cellContent.includes(placeholder)
+                    );
+
+                    if (isPlaceholder) {
+                        console.log(`🚫 Fila ${rowIndex + 1}: Es texto placeholder (no indica apertura real)`);
+                        placeholderCount++;
+                    } else {
+                        console.log(`✅ Fila ${rowIndex + 1}: Parece contener fecha real o indicación de apertura`);
+                        hasActualDates = true;
+                    }
                 }
             }
         });
-        
+
         console.log(`\n📈 RESUMEN:`);
         console.log(`Total de filas analizadas: ${dataRows.length}`);
         console.log(`Filas vacías: ${emptyCount}`);
-        console.log(`Filas con contenido: ${dataRows.length - emptyCount}`);
-        console.log(`¿Alguna tiene valor?: ${hasAnyValue}`);
-        
-        return hasAnyValue;
-        
+        console.log(`Filas con placeholders: ${placeholderCount}`);
+        console.log(`Filas con fechas reales: ${dataRows.length - emptyCount - placeholderCount}`);
+        console.log(`¿Hay fechas reales o aperturas?: ${hasActualDates}`);
+
+        return hasActualDates;
+
     } catch (error) {
         console.error('❌ Error analizando el HTML:', error.message);
         return false;
