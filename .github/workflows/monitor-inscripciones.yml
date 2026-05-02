@@ -1,16 +1,7 @@
 name: 🔍 IIC Buenos Aires - Monitor de Inscripciones CILS
 
 on:
-  # Ejecutar 3 veces al día en hora argentina (UTC-3)
-  schedule:
-    # 7:00 AM Argentina (10:00 AM UTC)
-    - cron: '0 10 * * *'
-    # 1:00 PM Argentina (4:00 PM UTC)  
-    - cron: '0 16 * * *'
-    # 7:00 PM Argentina (10:00 PM UTC)
-    - cron: '0 22 * * *'
-  
-  # Permitir ejecución manual
+  # Workflow desactivado: sin ejecución automática
   workflow_dispatch:
 
 # Permisos necesarios para hacer commits automáticos
@@ -21,6 +12,7 @@ permissions:
 jobs:
   monitor-inscripciones:
     name: 🎯 Verificar Apertura Inscripciones
+    if: ${{ false }}
     runs-on: ubuntu-latest
     
     steps:

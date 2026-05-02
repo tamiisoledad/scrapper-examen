@@ -1,11 +1,7 @@
 name: 📅 IIC Buenos Aires - Alerta Semanal del Sistema
 
 on:
-  # Ejecutar todos los jueves a las 9:00 AM hora argentina (12:00 PM UTC)
-  schedule:
-    - cron: '0 12 * * 4'  # 0 minutos, 12 horas, cualquier día del mes, cualquier mes, jueves (4)
-  
-  # Permitir ejecución manual
+  # Workflow desactivado: sin ejecución automática
   workflow_dispatch:
 
 # Permisos necesarios
@@ -16,6 +12,7 @@ permissions:
 jobs:
   weekly-alert:
     name: 💚 Enviar Alerta Semanal
+    if: ${{ false }}
     runs-on: ubuntu-latest
     
     steps:
